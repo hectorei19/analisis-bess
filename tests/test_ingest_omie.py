@@ -85,6 +85,57 @@ def test_formato_inesperado_se_rechaza(texto, motivo):
         parse_marginalpdbc(texto, date(2025, 3, 1), source="test")
 
 
+class OmieFalso:
+    """Simula el servidor de OMIE: solo existen los ficheros indicados."""
+
+    def __init__(self, ficheros: dict[str, bytes]):
+        self.ficheros = ficheros
+        self.pedidos = []
+
+    def get(self, url, **kwargs):
+        name = url.split("filename=")[1]
+        self.pedidos.append(name)
+        body = self.ficheros.get(name)
+
+        class Resp:
+            status_code = 200 if body is not None else 404
+            content = body or b""
+
+            def raise_for_status(self):
+                pass
+
+        return Resp()
+
+
+def test_usa_la_version_vigente(tmp_path):
+    # Como el 30-10-2025 real: no existen .1 ni .2, solo .3
+    texto = (FIXTURES / "marginalpdbc_20251001.1").read_bytes().replace(b"2025;10;01", b"2025;10;30")
+    omie = OmieFalso({"marginalpdbc_20251030.3": texto})
+    df = load_day(date(2025, 10, 30), raw_dir=tmp_path, session=omie)
+    assert omie.pedidos == ["marginalpdbc_20251030.1", "marginalpdbc_20251030.2",
+                            "marginalpdbc_20251030.3"]
+    assert (df["source"] == "OMIE marginalpdbc marginalpdbc_20251030.3").all()
+    assert [f.name for f in tmp_path.iterdir()] == ["marginalpdbc_20251030.3"]
+
+
+def test_refresh_sustituye_version_corregida(tmp_path):
+    original = (FIXTURES / "marginalpdbc_20250301.1").read_bytes()
+    corregido = original.replace(b"105.36;105.36", b"99.99;99.99")
+    load_day(date(2025, 3, 1), raw_dir=tmp_path,
+             session=OmieFalso({"marginalpdbc_20250301.1": original}))
+    # OMIE publica una corrección: desaparece la .1 y aparece la .2
+    df = load_day(date(2025, 3, 1), raw_dir=tmp_path, refresh=True,
+                  session=OmieFalso({"marginalpdbc_20250301.2": corregido}))
+    assert df[df["market"] == "ES"]["price_eur_mwh"].iloc[0] == 99.99
+    assert [f.name for f in tmp_path.iterdir()] == ["marginalpdbc_20250301.2"]
+
+
+def test_dia_no_publicado_devuelve_none(tmp_path):
+    omie = OmieFalso({})
+    assert load_day(date(2026, 9, 30), raw_dir=tmp_path, session=omie) is None
+    assert len(omie.pedidos) == 9                  # probó de la .1 a la .9
+
+
 def test_load_day_usa_la_cache_sin_descargar(tmp_path):
     (tmp_path / "marginalpdbc_20250301.1").write_bytes(
         (FIXTURES / "marginalpdbc_20250301.1").read_bytes())

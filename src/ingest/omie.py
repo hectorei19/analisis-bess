@@ -13,6 +13,9 @@ pública de información", v1.36, apartado 6.18, y ficheros reales):
 - Desde el 01-10-2025: periodos de 15 minutos (92/96/100 al día).
 - El periodo 1 empieza a las 00:00 hora peninsular española y los periodos son
   consecutivos en tiempo real (en el cambio de hora hay 1 h de menos o de más).
+- Versiones: el fichero se llama marginalpdbc_AAAAMMDD.v. OMIE solo conserva la
+  última versión; si corrige un día, la .1 desaparece y queda la .2, .3...
+  (comprobado, p. ej. 30-10-2025 → .3 y 27-11-2025 → .2).
 """
 
 from __future__ import annotations
@@ -26,8 +29,9 @@ import requests
 
 URL_TEMPLATE = (
     "https://www.omie.es/es/file-download"
-    "?parents=marginalpdbc&filename=marginalpdbc_{yyyymmdd}.1"
+    "?parents=marginalpdbc&filename={name}"
 )
+MAX_VERSION = 9
 SOURCE_PREFIX = "OMIE marginalpdbc"
 TZ_MARKET = "Europe/Madrid"
 MARKETS = {"PT": 1, "ES": 2}          # posición en cada registro (periodo, PT, ES)
@@ -38,8 +42,8 @@ class OmieFormatError(ValueError):
     """El fichero no tiene el formato esperado: mejor parar que guardar datos dudosos."""
 
 
-def file_name(day: date) -> str:
-    return f"marginalpdbc_{day:%Y%m%d}.1"
+def file_name(day: date, version: int = 1) -> str:
+    return f"marginalpdbc_{day:%Y%m%d}.{version}"
 
 
 def day_length_hours(day: date) -> int:
@@ -98,40 +102,56 @@ def parse_marginalpdbc(text: str, day: date, source: str) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
+def _cached_files(raw_dir: Path, day: date) -> list[Path]:
+    """Ficheros del día ya guardados, de menor a mayor versión."""
+    files = raw_dir.glob(f"marginalpdbc_{day:%Y%m%d}.*")
+    return sorted(files, key=lambda f: int(f.suffix[1:]))
+
+
 def fetch_day(day: date, raw_dir: Path | None = None,
               session: requests.Session | None = None,
-              pause_s: float = 0.3) -> str | None:
+              refresh: bool = False,
+              pause_s: float = 0.3) -> tuple[str, str] | None:
     """
-    Devuelve el texto del fichero del día, o None si OMIE aún no lo ha publicado.
+    Devuelve (nombre_fichero, texto) de la versión vigente del día, o None si
+    OMIE aún no lo ha publicado.
+
     Si `raw_dir` está definido, guarda el fichero original y lo reutiliza después
-    (así repetir un backfill no vuelve a descargar nada).
+    (así repetir un backfill no vuelve a descargar nada). Con `refresh=True` se
+    ignora la caché y se vuelve a consultar OMIE (para detectar correcciones).
     """
-    name = file_name(day)
-    cached = raw_dir / name if raw_dir else None
-    if cached and cached.exists():
-        return cached.read_text(encoding="latin-1")
+    if raw_dir and not refresh:
+        cached = _cached_files(raw_dir, day)
+        if cached:
+            return cached[-1].name, cached[-1].read_text(encoding="latin-1")
 
     http = session or requests.Session()
-    resp = http.get(URL_TEMPLATE.format(yyyymmdd=f"{day:%Y%m%d}"),
-                    headers={"User-Agent": USER_AGENT}, timeout=30)
-    time.sleep(pause_s)                        # cortesía con el servidor de OMIE
-    if resp.status_code == 404:
-        return None
-    resp.raise_for_status()
-    text = resp.content.decode("latin-1")
-    if not text.startswith("MARGINALPDBC"):
-        raise OmieFormatError(f"{name}: la respuesta no es un fichero marginalpdbc")
-
-    if cached:
-        cached.parent.mkdir(parents=True, exist_ok=True)
-        cached.write_text(text, encoding="latin-1")
-    return text
+    for version in range(1, MAX_VERSION + 1):
+        name = file_name(day, version)
+        resp = http.get(URL_TEMPLATE.format(name=name),
+                        headers={"User-Agent": USER_AGENT}, timeout=30)
+        time.sleep(pause_s)                    # cortesía con el servidor de OMIE
+        if resp.status_code == 404:
+            continue                           # esa versión no existe: probar la siguiente
+        resp.raise_for_status()
+        text = resp.content.decode("latin-1")
+        if not text.startswith("MARGINALPDBC"):
+            raise OmieFormatError(f"{name}: la respuesta no es un fichero marginalpdbc")
+        if raw_dir:
+            raw_dir.mkdir(parents=True, exist_ok=True)
+            for old in _cached_files(raw_dir, day):   # solo se conserva la vigente
+                old.unlink()
+            (raw_dir / name).write_text(text, encoding="latin-1")
+        return name, text
+    return None
 
 
 def load_day(day: date, raw_dir: Path | None = None,
-             session: requests.Session | None = None) -> pd.DataFrame | None:
+             session: requests.Session | None = None,
+             refresh: bool = False) -> pd.DataFrame | None:
     """Descarga (o lee de caché) y normaliza un día. None si no está publicado."""
-    text = fetch_day(day, raw_dir=raw_dir, session=session)
-    if text is None:
+    found = fetch_day(day, raw_dir=raw_dir, session=session, refresh=refresh)
+    if found is None:
         return None
-    return parse_marginalpdbc(text, day, source=f"{SOURCE_PREFIX} {file_name(day)}")
+    name, text = found
+    return parse_marginalpdbc(text, day, source=f"{SOURCE_PREFIX} {name}")
