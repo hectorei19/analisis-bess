@@ -53,6 +53,11 @@ el script lo avisa al final (no rellena datos).
 
 Se abre en <http://localhost:8501>. Para pararla: `Ctrl + C` en la terminal.
 
+La página **Calculadora BESS** permite elegir el periodo y las características de la
+batería (potencia, capacidad, eficiencia, ciclos máximos al día, estado de carga
+mínimo y máximo, coste de degradación) y calcula al momento el arbitraje óptimo con
+los precios guardados.
+
 **Tests:**
 
 ```powershell

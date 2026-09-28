@@ -2,7 +2,8 @@ from datetime import date
 
 import pandas as pd
 
-from src.analytics.bess_daily import compute_bess_daily
+from src.analytics.bess_daily import compute_bess_daily, compute_for_battery
+from src.bess_arbitrage import BatteryParams
 from src.ingest.omie import parse_marginalpdbc
 from tests.conftest import FIXTURES
 
@@ -36,6 +37,30 @@ def test_optimo_menor_o_igual_que_simple_por_dia():
     piv = out.pivot_table(index=["date", "duration_h"], columns="method",
                           values="revenue_eur_per_mw")
     assert (piv["optimal"] <= piv["simple"] + 0.011).all()
+
+
+def test_calculadora_coincide_con_bess_daily():
+    prices = fixture_prices("20250301", "20251001", "20251026")
+    tabla = compute_bess_daily(prices)
+    tabla = tabla[(tabla.method == "optimal") & (tabla.duration_h == 2)].set_index("date")
+    calc = compute_for_battery(prices, BatteryParams(1, 2, 0.88)).set_index("date")
+    assert (calc["revenue_eur_per_mw"] == tabla["revenue_eur_per_mw"]).all()
+
+
+def test_calculadora_filtra_periodo_y_escala_con_la_potencia():
+    prices = fixture_prices("20250301", "20251001", "20251026")
+    calc = compute_for_battery(prices, BatteryParams(10, 20, 0.88),
+                               start=date(2025, 10, 1), end=date(2025, 10, 26))
+    assert list(calc["date"]) == ["2025-10-01", "2025-10-26"]
+    # 10 MW / 20 MWh gana 10 veces lo que 1 MW / 2 MWh
+    base = compute_for_battery(prices, BatteryParams(1, 2, 0.88),
+                               start=date(2025, 10, 1)).set_index("date")
+    assert (calc.set_index("date")["revenue_eur"] - 10 * base["revenue_eur"]).abs().max() < 0.2
+
+
+def test_calculadora_periodo_sin_datos():
+    prices = fixture_prices("20250301")
+    assert compute_for_battery(prices, BatteryParams(), start=date(2026, 1, 1)).empty
 
 
 def test_dia_incompleto_se_descarta():

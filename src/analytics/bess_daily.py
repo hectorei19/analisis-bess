@@ -5,6 +5,8 @@ batería, a partir de los precios guardados en la tabla `prices`.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pandas as pd
 
 from src.bess_arbitrage import BatteryParams, run_period
@@ -28,6 +30,32 @@ def complete_days_only(prices: pd.Series) -> pd.Series:
     return prices[[d in ok for d in local_day]]
 
 
+def _price_series(prices_utc: pd.DataFrame) -> pd.Series:
+    """Filas de `prices` (ts_utc, price_eur_mwh) → serie con índice UTC, solo días completos."""
+    s = pd.Series(prices_utc["price_eur_mwh"].to_numpy(dtype=float),
+                  index=pd.DatetimeIndex(prices_utc["ts_utc"]), name="price_eur_mwh")
+    return complete_days_only(s.sort_index())
+
+
+def compute_for_battery(prices_utc: pd.DataFrame, bp: BatteryParams,
+                        start: date | None = None, end: date | None = None,
+                        method: str = "optimal") -> pd.DataFrame:
+    """
+    Arbitraje día a día para una batería cualquiera entre `start` y `end`
+    (días de Madrid, ambos incluidos). Devuelve una fila por día con las
+    columnas de `run_period` (revenue_eur, revenue_eur_per_mw, cycles...).
+    """
+    if prices_utc.empty:
+        return pd.DataFrame()
+    s = _price_series(prices_utc)
+    local_day = s.index.tz_convert(TZ_MARKET).date
+    keep = [(start is None or d >= start) and (end is None or d <= end) for d in local_day]
+    s = s[keep]
+    if s.empty:
+        return pd.DataFrame()
+    return run_period(s, bp, method=method, tz=TZ_MARKET)
+
+
 def compute_bess_daily(prices_utc: pd.DataFrame,
                        durations_h=DURATIONS_H, rte: float = RTE,
                        max_cycles_per_day: float = MAX_CYCLES_PER_DAY,
@@ -38,9 +66,7 @@ def compute_bess_daily(prices_utc: pd.DataFrame,
     """
     if prices_utc.empty:
         return pd.DataFrame(columns=BESS_DAILY_COLUMNS)
-    s = pd.Series(prices_utc["price_eur_mwh"].to_numpy(dtype=float),
-                  index=pd.DatetimeIndex(prices_utc["ts_utc"]), name="price_eur_mwh")
-    s = complete_days_only(s.sort_index())
+    s = _price_series(prices_utc)
 
     frames = []
     for method in methods:

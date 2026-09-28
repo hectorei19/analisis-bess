@@ -8,22 +8,46 @@ TEXTS = {
             "(BESS): spreads, ingresos de arbitraje y su evolución."
         ),
         "home_status": "Versión en construcción. Páginas disponibles:",
-        "page_daily": "Ingresos diarios de arbitraje",
-        "daily_title": "Ingresos diarios de arbitraje por duración",
-        "daily_caption": (
-            "Batería de 1 MW, eficiencia {rte:.0%}, {cycles:g} ciclo/día. "
-            "Método: optimización con previsión perfecta."
+        "page_calc": "Calculadora de arbitraje BESS",
+        "calc_title": "Calculadora de arbitraje BESS",
+        "calc_intro": (
+            "Elige el periodo y las características de la batería. El cálculo optimiza "
+            "cada día la carga y descarga en el mercado diario con previsión perfecta."
         ),
-        "kpi_year": "{dur} h · €/MW·año",
+        "period_input": "Periodo",
+        "power": "Potencia (MW)",
+        "energy": "Capacidad (MWh)",
+        "rte": "Eficiencia ida y vuelta (%)",
+        "cycles": "Ciclos máximos al día",
+        "soc": "Estado de carga mínimo y máximo (%)",
+        "degradation": "Coste de degradación (€/MWh descargado)",
+        "calculate": "Calcular",
+        "duration_info": "Duración: {dur:g} h",
+        "period_incomplete": "Elige la fecha de inicio y la de fin del periodo.",
+        "soc_invalid": "El estado de carga mínimo debe ser menor que el máximo.",
+        "no_days": "No hay días con datos completos en el periodo elegido.",
+        "computing": "Calculando {days} días…",
+        "kpi_total": "Ingreso total del periodo",
+        "kpi_year": "Ingreso anual equivalente",
+        "kpi_year_mw": "{value} €/MW·año",
+        "kpi_cycles": "Ciclos medios al día",
+        "kpi_days": "Días analizados",
+        "daily_chart": "Ingreso diario",
+        "monthly_chart": "Ingreso mensual",
         "smoothing": "Media móvil de 7 días",
-        "y_axis": "€/MW·día",
-        "duration": "Duración",
+        "y_day": "€/día",
+        "y_month": "€/mes",
+        "partial_months": "En tono claro, meses que el periodo no cubre completos.",
         "no_data": (
-            "Todavía no hay datos. Ejecuta primero scripts.backfill_prices y "
-            "scripts.compute_bess_daily."
+            "Todavía no hay datos. Ejecuta primero scripts.backfill_prices."
         ),
         "data_table": "Ver datos en tabla",
-        "period": "Periodo: {start} – {end} ({days} días)",
+        "col_date": "Fecha",
+        "col_revenue": "Ingreso (€)",
+        "col_cycles": "Ciclos",
+        "col_buy": "Precio medio compra (€/MWh)",
+        "col_sell": "Precio medio venta (€/MWh)",
+        "col_spread": "Spread máx−mín (€/MWh)",
         "cta": "¿Analizamos tu proyecto? Contacta con nosotros",
         "cta_button": "Contactar",
         "disclaimer": (
@@ -39,21 +63,44 @@ TEXTS = {
             "market: spreads, arbitrage revenues and their evolution."
         ),
         "home_status": "Work in progress. Available pages:",
-        "page_daily": "Daily arbitrage revenues",
-        "daily_title": "Daily arbitrage revenues by duration",
-        "daily_caption": (
-            "1 MW battery, {rte:.0%} round-trip efficiency, {cycles:g} cycle/day. "
-            "Method: optimisation with perfect foresight."
+        "page_calc": "BESS arbitrage calculator",
+        "calc_title": "BESS arbitrage calculator",
+        "calc_intro": (
+            "Choose the period and the battery specifications. Each day, charging and "
+            "discharging on the day-ahead market is optimised with perfect foresight."
         ),
-        "kpi_year": "{dur} h · €/MW·year",
+        "period_input": "Period",
+        "power": "Power (MW)",
+        "energy": "Capacity (MWh)",
+        "rte": "Round-trip efficiency (%)",
+        "cycles": "Maximum cycles per day",
+        "soc": "Minimum and maximum state of charge (%)",
+        "degradation": "Degradation cost (€/MWh discharged)",
+        "calculate": "Calculate",
+        "duration_info": "Duration: {dur:g} h",
+        "period_incomplete": "Choose both the start and end date of the period.",
+        "soc_invalid": "Minimum state of charge must be lower than the maximum.",
+        "no_days": "There are no days with complete data in the selected period.",
+        "computing": "Computing {days} days…",
+        "kpi_total": "Total revenue for the period",
+        "kpi_year": "Annualised revenue",
+        "kpi_year_mw": "{value} €/MW·year",
+        "kpi_cycles": "Average cycles per day",
+        "kpi_days": "Days analysed",
+        "daily_chart": "Daily revenue",
+        "monthly_chart": "Monthly revenue",
         "smoothing": "7-day moving average",
-        "y_axis": "€/MW·day",
-        "duration": "Duration",
-        "no_data": (
-            "No data yet. Run scripts.backfill_prices and scripts.compute_bess_daily first."
-        ),
+        "y_day": "€/day",
+        "y_month": "€/month",
+        "partial_months": "Lighter bars: months not fully covered by the period.",
+        "no_data": "No data yet. Run scripts.backfill_prices first.",
         "data_table": "Show data table",
-        "period": "Period: {start} – {end} ({days} days)",
+        "col_date": "Date",
+        "col_revenue": "Revenue (€)",
+        "col_cycles": "Cycles",
+        "col_buy": "Average buy price (€/MWh)",
+        "col_sell": "Average sell price (€/MWh)",
+        "col_spread": "Max−min spread (€/MWh)",
         "cta": "Shall we analyse your project? Get in touch",
         "cta_button": "Contact",
         "disclaimer": (

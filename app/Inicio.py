@@ -13,5 +13,5 @@ if branding()["company"]["name"]:
     st.caption(branding()["company"]["name"])
 st.write(t(lang, "home_intro"))
 st.write(t(lang, "home_status"))
-st.page_link("pages/1_Ingresos_diarios.py", label=t(lang, "page_daily"), icon="📈")
+st.page_link("pages/1_Calculadora_BESS.py", label=t(lang, "page_calc"), icon="📈")
 footer(lang)
