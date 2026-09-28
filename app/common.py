@@ -24,12 +24,12 @@ def branding() -> dict:
 
 def setup_page(title_key: str) -> str:
     """Configura la página y la barra lateral. Devuelve el idioma elegido."""
-    brand = branding()
-    st.set_page_config(page_title=f"{brand['company']['name']} · {TEXTS['es'][title_key]}",
+    brand = branding()["company"]
+    title = TEXTS["es"][title_key]
+    st.set_page_config(page_title=f"{brand['name']} · {title}" if brand["name"] else title,
                        layout="wide")
-    logo = brand["company"].get("logo")
-    if logo:
-        st.logo(str(APP_DIR / logo))
+    if brand.get("logo"):
+        st.logo(str(APP_DIR / brand["logo"]))
     return st.sidebar.radio("Idioma / Language", ["es", "en"],
                             format_func=lambda x: {"es": "Español", "en": "English"}[x],
                             horizontal=True, key="lang")
@@ -40,13 +40,12 @@ def t(lang: str, key: str, **kwargs) -> str:
 
 
 def footer(lang: str) -> None:
-    """Fuente, aviso legal y llamada a la acción: van al pie de cada página."""
-    brand = branding()
+    """Fuente y aviso legal (siempre) y llamada a la acción (si hay enlace de contacto)."""
+    contact_url = branding()["company"].get("contact_url")
     st.divider()
     st.caption(t(lang, "source"))
     st.caption(t(lang, "disclaimer"))
-    col_text, col_btn = st.columns([4, 1], vertical_alignment="center")
-    col_text.markdown(f"**{t(lang, 'cta', company=brand['company']['name'])}**")
-    if brand["company"].get("contact_url"):
-        col_btn.link_button(t(lang, "cta_button"), brand["company"]["contact_url"],
-                            type="primary")
+    if contact_url:
+        col_text, col_btn = st.columns([4, 1], vertical_alignment="center")
+        col_text.markdown(f"**{t(lang, 'cta')}**")
+        col_btn.link_button(t(lang, "cta_button"), contact_url, type="primary")

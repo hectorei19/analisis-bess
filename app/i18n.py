@@ -24,7 +24,7 @@ TEXTS = {
         ),
         "data_table": "Ver datos en tabla",
         "period": "Periodo: {start} – {end} ({days} días)",
-        "cta": "¿Analizamos tu proyecto? Contacta con {company}",
+        "cta": "¿Analizamos tu proyecto? Contacta con nosotros",
         "cta_button": "Contactar",
         "disclaimer": (
             "Arbitraje en el mercado diario con previsión perfecta. Resultados "
@@ -54,7 +54,7 @@ TEXTS = {
         ),
         "data_table": "Show data table",
         "period": "Period: {start} – {end} ({days} days)",
-        "cta": "Shall we analyse your project? Contact {company}",
+        "cta": "Shall we analyse your project? Get in touch",
         "cta_button": "Contact",
         "disclaimer": (
             "Day-ahead market arbitrage with perfect foresight. Indicative results, "

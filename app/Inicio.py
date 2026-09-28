@@ -9,7 +9,8 @@ from common import branding, footer, setup_page, t
 
 lang = setup_page("app_title")
 st.title(t(lang, "app_title"))
-st.caption(branding()["company"]["name"])
+if branding()["company"]["name"]:
+    st.caption(branding()["company"]["name"])
 st.write(t(lang, "home_intro"))
 st.write(t(lang, "home_status"))
 st.page_link("pages/1_Ingresos_diarios.py", label=t(lang, "page_daily"), icon="📈")
