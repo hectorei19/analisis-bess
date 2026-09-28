@@ -1,8 +1,8 @@
 """
 Copia de los precios en un archivo comprimido dentro del repositorio
 (snapshot/prices.csv.gz). Sirve para que la web publicada tenga datos sin
-depender de la base de datos local: al arrancar, si la tabla `prices` está
-vacía, se rellena desde este archivo.
+depender de la base de datos local: al arrancar, si el archivo trae más
+datos que la tabla `prices` (base vacía o archivo actualizado), se cargan.
 
 Regenerar tras actualizar precios:
     .\\.venv\\Scripts\\python.exe -m scripts.export_snapshot
@@ -36,9 +36,17 @@ def load_snapshot(conn, path: Path = SNAPSHOT_PATH) -> int:
     return save_prices(conn, df)
 
 
-def seed_if_empty(conn, path: Path = SNAPSHOT_PATH) -> int:
-    """Rellena `prices` desde el archivo si la tabla está vacía. Devuelve filas cargadas."""
-    has_rows = conn.execute("SELECT 1 FROM prices LIMIT 1").fetchone()
-    if has_rows or not path.exists():
+def sync_from_snapshot(conn, path: Path = SNAPSHOT_PATH) -> int:
+    """
+    Carga el archivo en `prices` si trae más filas que la base de datos (base
+    vacía, o archivo actualizado con días nuevos). Devuelve filas cargadas.
+    Una base local con más datos que el archivo no se toca.
+    """
+    if not path.exists():
         return 0
-    return load_snapshot(conn, path)
+    n_db = conn.execute("SELECT COUNT(*) FROM prices").fetchone()[0]
+    df = pd.read_csv(path)
+    if len(df) <= n_db:
+        return 0
+    df["ts_utc"] = pd.to_datetime(df["ts_utc"], format=TS_FORMAT, utc=True)
+    return save_prices(conn, df)

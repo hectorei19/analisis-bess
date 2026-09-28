@@ -21,14 +21,14 @@ from src.analytics.finance import InvestmentParams, evaluate
 from src.bess_arbitrage import BatteryParams, annual_summary
 from src.db.connection import get_connection
 from src.db.repository import load_prices
-from src.db.snapshot import seed_if_empty
+from src.db.snapshot import sync_from_snapshot
 from src.ingest.omie import TZ_MARKET
 
 
 @st.cache_data(ttl=3600)
 def load_es_prices() -> pd.DataFrame:
     conn = get_connection()
-    seed_if_empty(conn)            # en la web publicada, la base arranca vacía
+    sync_from_snapshot(conn)       # la web publicada se alimenta del archivo
     return load_prices(conn, "ES")[["ts_utc", "price_eur_mwh"]]
 
 
