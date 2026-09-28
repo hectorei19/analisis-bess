@@ -3,8 +3,8 @@ bess_arbitrage.py — Cálculo de ingresos de arbitraje de una batería (BESS)
 en el mercado diario español (OMIE / e·sios).
 
 Dos métodos:
-  - arbitrage_simple():  heurística rápida (N periodos más baratos / más caros).
-                         Ignora el orden temporal → es una COTA SUPERIOR orientativa.
+  - arbitrage_simple():  cálculo rápido sin optimizador que ignora el orden
+                         temporal → es una COTA SUPERIOR garantizada del óptimo.
   - arbitrage_optimal(): optimización lineal (scipy / HiGHS) que respeta el
                          estado de carga periodo a periodo. Es la que se debe
                          usar para cifras publicadas o informes.
@@ -126,48 +126,59 @@ def _summarise(date, method, p, charge, discharge, dt, bp: BatteryParams) -> Dai
 # ─────────────────────────────────────────────────────────────────────────────
 def arbitrage_simple(prices: pd.Series, bp: BatteryParams) -> tuple[DailyResult, pd.DataFrame]:
     """
-    Carga en los periodos más baratos y descarga en los más caros hasta completar
-    `max_cycles_per_day` ciclos. Solo opera un par (carga, descarga) si el spread
-    compensa pérdidas y degradación. NO respeta el orden temporal.
+    Cota superior del arbitraje: resuelve de forma exacta el problema de
+    `arbitrage_optimal` SIN el orden temporal (sin dinámica de SoC periodo a
+    periodo). Mantiene potencia máxima, pérdidas (descarga ≤ rte · carga),
+    degradación y el límite de `max_cycles_per_day`. Al ser una relajación del
+    problema óptimo, su ingreso es siempre ≥ el de `arbitrage_optimal`.
+
+    Algoritmo voraz (exacto para esta relajación):
+      1. Con precio negativo se carga siempre a potencia nominal (cobra por
+         consumir); esa energía queda disponible "gratis" para vender.
+      2. Se descarga en los periodos más caros mientras compense la
+         degradación, usando primero la energía gratuita y después la
+         comprada en los periodos más baratos, si  p_venta − degradación −
+         p_compra/rte > 0. Todo ello hasta agotar ciclos o potencia.
+    El programa resultante NO es operable (puede vender antes de comprar).
     """
     bp.validate()
     p, dt, idx = _prep_prices(prices)
-    eta_c = eta_d = np.sqrt(bp.rte)
 
-    # Energía a descargar al día y periodos necesarios a potencia nominal
-    e_target = bp.usable_mwh * bp.max_cycles_per_day
-    n_dis = e_target / (bp.power_mw * dt)                 # periodos de descarga
-    n_ch = n_dis / bp.rte                                 # se carga más por las pérdidas
+    cap = bp.power_mw * dt                            # MWh por periodo a potencia nominal
+    neg = p < 0
+    e_charge = np.where(neg, cap, 0.0)                # paso 1: carga en precios negativos
+    e_discharge = np.zeros(len(p))
+    free = bp.rte * e_charge.sum()                    # MWh vendibles sin comprar más
+    ch_room = np.where(neg, 0.0, cap)                 # capacidad de carga aún libre (MWh)
+    dis_left = bp.usable_mwh * bp.max_cycles_per_day  # MWh que aún se pueden descargar
 
-    order_cheap = np.argsort(p)
-    order_exp = np.argsort(-p)
-    charge = np.zeros_like(p)
-    discharge = np.zeros_like(p)
-
-    # Emparejamos el más barato con el más caro, sucesivamente
-    ch_left, dis_left = n_ch, n_dis
-    ci = di = 0
-    while ch_left > 1e-9 and dis_left > 1e-9 and ci < len(p) and di < len(p):
-        c, d = order_cheap[ci], order_exp[di]
-        if c == d or charge[d] > 0 or discharge[c] > 0:
+    cheap = [c for c in np.argsort(p, kind="stable") if not neg[c]]
+    ci = 0
+    for d in np.argsort(-p, kind="stable"):           # paso 2: del más caro al más barato
+        if dis_left <= 1e-12 or p[d] - bp.degradation_eur_mwh <= 0:
             break
-        # ¿Compensa? venta*eta_d*eta_c − compra − degradación  > 0
-        if p[d] * bp.rte - p[c] - bp.degradation_eur_mwh * bp.rte <= 0:
-            break
-        f_c = min(1.0, ch_left)
-        f_d = min(1.0, dis_left)
-        charge[c] = bp.power_mw * f_c
-        discharge[d] = bp.power_mw * f_d
-        ch_left -= f_c
-        dis_left -= f_d
-        ci += 1
-        di += 1
+        room = cap
+        x = min(room, free, dis_left)                 # primero, energía gratuita
+        e_discharge[d] += x
+        free -= x
+        dis_left -= x
+        room -= x
+        while room > 1e-12 and dis_left > 1e-12 and ci < len(cheap):
+            c = cheap[ci]
+            # ¿Compensa? cada MWh vendido exige comprar 1/rte MWh
+            if p[d] - bp.degradation_eur_mwh - p[c] / bp.rte <= 0:
+                break
+            x = min(room, ch_room[c] * bp.rte, dis_left)
+            e_discharge[d] += x
+            e_charge[c] += x / bp.rte
+            ch_room[c] -= x / bp.rte
+            dis_left -= x
+            room -= x
+            if ch_room[c] <= 1e-12:
+                ci += 1
 
-    # Ajuste de balance energético: lo descargado no puede superar lo cargado × rte
-    e_in = charge.sum() * dt * eta_c
-    e_out_needed = discharge.sum() * dt / eta_d
-    if e_out_needed > e_in + 1e-9 and e_out_needed > 0:
-        discharge *= e_in / e_out_needed
+    charge = e_charge / dt
+    discharge = e_discharge / dt
 
     schedule = pd.DataFrame(
         {"price": p, "charge_mw": charge, "discharge_mw": discharge}, index=idx
