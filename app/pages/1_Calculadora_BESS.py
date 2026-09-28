@@ -57,8 +57,8 @@ if prices.empty:
 local_days = prices["ts_utc"].dt.tz_convert(TZ_MARKET).dt.date
 first_day, last_day = local_days.min(), local_days.max()
 
-# ─── Parámetros ──────────────────────────────────────────────────────────────
-with st.form("params"):
+# ─── Parámetros (cualquier cambio recalcula al momento) ─────────────────────
+with st.container(border=True):
     c1, c2, c3 = st.columns([2, 1, 1])
     period = c1.date_input(t(lang, "period_input"),
                            value=(max(first_day, last_day - timedelta(days=364)), last_day),
@@ -74,7 +74,6 @@ with st.form("params"):
     soc_min, soc_max = c6.slider(t(lang, "soc"), min_value=0, max_value=100, value=(5, 95))
     degradation = c7.number_input(t(lang, "degradation"), min_value=0.0, max_value=200.0,
                                   value=0.0, step=1.0)
-    st.form_submit_button(t(lang, "calculate"), type="primary")
 
 st.caption(t(lang, "duration_info", dur=energy / power))
 
