@@ -1,0 +1,27 @@
+# Entorno virtual de Python
+.venv/
+
+# Cachés de Python y pytest
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Datos generados (se regeneran con los scripts de scripts/)
+data/
+*.db
+*.db-journal
+*.sqlite
+
+# Secretos (tokens de Turso, e·sios...)
+.env
+.streamlit/secrets.toml
+
+# Configuración local de Claude Code
+.claude/settings.local.json
+
+# Sistema operativo y editores
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,9 @@
+# pandas 3.x está bloqueado por Smart App Control de Windows en el equipo de desarrollo
+# (DLL no firmada). pandas 2.3 funciona correctamente con Python 3.14.
+pandas>=2.3,<3
+numpy>=2.3
+scipy>=1.16
+plotly>=6.0
+streamlit>=1.50
+requests>=2.32
+pytest>=8.0
