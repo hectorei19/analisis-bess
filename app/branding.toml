@@ -1,0 +1,19 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Marca de la web: ÚNICO archivo a tocar para cambiar nombre, logo y colores.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[company]
+name = ""
+# Ruta relativa a la carpeta app/ (p. ej. "assets/logo.png"). Vacío = sin logo.
+logo = ""
+# Enlace de la llamada a la acción (p. ej. "mailto:info@..." o la web de contacto).
+# PROVISIONAL: vacío hasta que haya enlace de contacto; el botón no se muestra.
+contact_url = ""
+
+[colors]
+# PROVISIONAL: sustituir por los colores corporativos.
+primary = "#2a78d6"
+
+# Colores de las series de los gráficos (1 h, 2 h, 4 h), en este orden fijo.
+# Paleta validada para daltonismo; si se cambia, conviene revalidarla.
+series = ["#2a78d6", "#eb6834", "#1baf7a"]
