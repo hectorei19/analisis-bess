@@ -37,6 +37,59 @@ TEXTS = {
         "y_day": "€/día",
         "y_month": "€/mes",
         "partial_months": "En tono claro, meses que el periodo no cubre completos.",
+        "revenue_section": "Ingresos",
+        "prices_section": "Precios medios de compra y venta",
+        "prices_caption": (
+            "Precio medio al que la batería compra (carga) y vende (descarga) la energía, "
+            "ponderado por los MWh de cada día."
+        ),
+        "daily_prices_chart": "Diario",
+        "monthly_prices_chart": "Mensual",
+        "buy": "Compra",
+        "sell": "Venta",
+        "invest_section": "Inversión y retorno",
+        "capex_mode": "Precio de la batería",
+        "capex_mode_kwh": "€/kWh",
+        "capex_mode_total": "Importe total (€)",
+        "capex_kwh": "Coste (€/kWh de capacidad)",
+        "capex_total": "Inversión total (€)",
+        "om": "Costes de operación (€/MW·año)",
+        "degr": "Degradación anual (%)",
+        "disc": "Tasa de descuento (%)",
+        "life": "Vida útil (años)",
+        "invest_defaults": (
+            "Los valores por defecto son solo un ejemplo, no datos de mercado: "
+            "ajústalos a tu proyecto."
+        ),
+        "capex_total_kpi": "Inversión total",
+        "payback": "Retorno simple",
+        "payback_disc": "Retorno descontado",
+        "npv": "VAN",
+        "irr": "TIR",
+        "years": "{n} años",
+        "not_recovered": "No en {n} años",
+        "year1": (
+            "Año 1: ingreso {rev} (anual equivalente del periodo elegido) − "
+            "costes de operación {om}."
+        ),
+        "cum_simple": "Caja acumulada",
+        "cum_disc": "Caja acumulada descontada",
+        "year_axis": "Año",
+        "cum_axis": "€ acumulados",
+        "cashflow_table": "Ver flujos de caja por año",
+        "cf_year": "Año",
+        "cf_revenue": "Ingreso (€)",
+        "cf_om": "Operación (€)",
+        "cf_capex": "Inversión (€)",
+        "cf_flow": "Flujo de caja (€)",
+        "cf_cum": "Acumulado (€)",
+        "cf_disc_cum": "Acumulado descontado (€)",
+        "invest_assumptions": (
+            "Supuestos: cada año se repite el ingreso anual equivalente del periodo elegido, "
+            "reducido por la degradación; costes de operación constantes. No incluye impuestos, "
+            "financiación, inflación, sustitución de celdas ni otros ingresos (intradía, "
+            "servicios de ajuste, capacidad)."
+        ),
         "no_data": (
             "Todavía no hay datos. Ejecuta primero scripts.backfill_prices."
         ),
@@ -91,6 +144,56 @@ TEXTS = {
         "y_day": "€/day",
         "y_month": "€/month",
         "partial_months": "Lighter bars: months not fully covered by the period.",
+        "revenue_section": "Revenue",
+        "prices_section": "Average buy and sell prices",
+        "prices_caption": (
+            "Average price at which the battery buys (charges) and sells (discharges) "
+            "energy, weighted by each day's MWh."
+        ),
+        "daily_prices_chart": "Daily",
+        "monthly_prices_chart": "Monthly",
+        "buy": "Buy",
+        "sell": "Sell",
+        "invest_section": "Investment and payback",
+        "capex_mode": "Battery price",
+        "capex_mode_kwh": "€/kWh",
+        "capex_mode_total": "Total amount (€)",
+        "capex_kwh": "Cost (€/kWh of capacity)",
+        "capex_total": "Total investment (€)",
+        "om": "Operating costs (€/MW·year)",
+        "degr": "Annual degradation (%)",
+        "disc": "Discount rate (%)",
+        "life": "Lifetime (years)",
+        "invest_defaults": (
+            "Default values are only an example, not market data: adjust them to your project."
+        ),
+        "capex_total_kpi": "Total investment",
+        "payback": "Simple payback",
+        "payback_disc": "Discounted payback",
+        "npv": "NPV",
+        "irr": "IRR",
+        "years": "{n} years",
+        "not_recovered": "Not within {n} years",
+        "year1": (
+            "Year 1: revenue {rev} (annualised from the selected period) − operating costs {om}."
+        ),
+        "cum_simple": "Cumulative cash flow",
+        "cum_disc": "Discounted cumulative cash flow",
+        "year_axis": "Year",
+        "cum_axis": "Cumulative €",
+        "cashflow_table": "Show yearly cash flows",
+        "cf_year": "Year",
+        "cf_revenue": "Revenue (€)",
+        "cf_om": "Operating (€)",
+        "cf_capex": "Investment (€)",
+        "cf_flow": "Cash flow (€)",
+        "cf_cum": "Cumulative (€)",
+        "cf_disc_cum": "Discounted cumulative (€)",
+        "invest_assumptions": (
+            "Assumptions: every year repeats the annualised revenue of the selected period, "
+            "reduced by degradation; constant operating costs. Excludes taxes, financing, "
+            "inflation, cell replacement and other revenues (intraday, balancing, capacity)."
+        ),
         "no_data": "No data yet. Run scripts.backfill_prices first.",
         "data_table": "Show data table",
         "col_date": "Date",

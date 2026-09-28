@@ -56,7 +56,10 @@ Se abre en <http://localhost:8501>. Para pararla: `Ctrl + C` en la terminal.
 La página **Calculadora BESS** permite elegir el periodo y las características de la
 batería (potencia, capacidad, eficiencia, ciclos máximos al día, estado de carga
 mínimo y máximo, coste de degradación) y calcula al momento el arbitraje óptimo con
-los precios guardados.
+los precios guardados (desde el 1-1-2025). Muestra ingresos y precios medios de compra y
+venta (diarios y mensuales) y, a partir del precio de la batería, el retorno de la
+inversión: retorno simple y descontado, VAN, TIR y caja acumulada año a año
+(`src/analytics/finance.py`).
 
 **Tests:**
 
